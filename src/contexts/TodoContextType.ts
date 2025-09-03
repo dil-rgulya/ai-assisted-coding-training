@@ -3,8 +3,8 @@ import type { Todo } from '../types/Todo';
 
 export interface TodoContextType {
   todos: Todo[];
-  addTodo: (title: string, description: string) => void;
-  editTodo: (id: string, updates: Partial<Todo>) => void;
+  addTodo: (title: string, description: string, dueDate?: string) => void;
+  editTodo: (id: string, updates: Partial<Omit<Todo, 'id' | 'createdAt'>>) => void;
   toggleTodoCompletion: (id: string) => void;
   deleteTodo: (id: string) => void;
 }
