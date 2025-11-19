@@ -1,7 +1,18 @@
 import React from 'react';
-import { ListItem, ListItemText, IconButton, Checkbox, Divider, Typography } from '@mui/material';
+import {
+  ListItem,
+  ListItemText,
+  IconButton,
+  Checkbox,
+  Divider,
+  Typography,
+  Chip,
+  Stack,
+} from '@mui/material';
 import type { Todo } from '../../types/Todo';
 import { useTodo } from '../../hooks/useTodo';
+import { isOverdue } from '../../utils/date';
+import { format } from 'date-fns';
 
 interface TodoItemProps {
   todo: Todo;
@@ -50,16 +61,27 @@ export const TodoItem: React.FC<TodoItemProps> = ({ todo, onEditClick }) => {
         <ListItemText
           disableTypography
           primary={
-            <Typography
-              variant="body1"
-              sx={{
-                textDecoration: todo.completed ? 'line-through' : 'none',
-                color: todo.completed ? 'text.secondary' : 'text.primary',
-                fontWeight: 500,
-              }}
-            >
-              {todo.title}
-            </Typography>
+            <Stack direction="row" spacing={1} alignItems="center">
+              <Typography
+                variant="body1"
+                sx={{
+                  textDecoration: todo.completed ? 'line-through' : 'none',
+                  color: todo.completed ? 'text.secondary' : 'text.primary',
+                  fontWeight: 500,
+                }}
+              >
+                {todo.title}
+              </Typography>
+              {todo.dueDate && (
+                <Chip
+                  size="small"
+                  label={format(new Date(todo.dueDate), 'PP')}
+                  color={isOverdue(todo.dueDate) && !todo.completed ? 'error' : 'default'}
+                  variant={isOverdue(todo.dueDate) && !todo.completed ? 'filled' : 'outlined'}
+                  data-testid="due-date-chip"
+                />
+              )}
+            </Stack>
           }
           secondary={
             <Typography

@@ -11,6 +11,8 @@ import {
   Checkbox,
 } from '@mui/material';
 import { useTodo } from '../../hooks/useTodo';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { isValidDateOnly } from '../../utils/date';
 // Todo type is used in the context, no need to import it directly here
 
 interface TodoModalProps {
@@ -22,6 +24,7 @@ interface TodoModalProps {
     title: string;
     description: string;
     completed: boolean;
+    dueDate?: string;
   };
 }
 
@@ -36,6 +39,7 @@ export const TodoModal: React.FC<TodoModalProps> = ({
   const [description, setDescription] = useState('');
   const [completed, setCompleted] = useState(false);
   const [titleError, setTitleError] = useState('');
+  const [dueDate, setDueDate] = useState<string | undefined>(undefined);
 
   // Reset form or load values when modal opens
   useEffect(() => {
@@ -44,10 +48,12 @@ export const TodoModal: React.FC<TodoModalProps> = ({
         setTitle(initialValues.title);
         setDescription(initialValues.description);
         setCompleted(initialValues.completed);
+        setDueDate(initialValues.dueDate);
       } else {
         setTitle('');
         setDescription('');
         setCompleted(false);
+        setDueDate(undefined);
       }
       setTitleError('');
     }
@@ -67,12 +73,13 @@ export const TodoModal: React.FC<TodoModalProps> = ({
     if (!validateForm()) return;
 
     if (mode === 'create') {
-      addTodo(title.trim(), description.trim());
+      addTodo(title.trim(), description.trim(), dueDate);
     } else if (mode === 'edit' && initialValues) {
       editTodo(initialValues.id, {
         title: title.trim(),
         description: description.trim(),
         completed,
+        dueDate,
       });
     }
     onClose();
@@ -121,6 +128,36 @@ export const TodoModal: React.FC<TodoModalProps> = ({
                 } as React.InputHTMLAttributes<HTMLInputElement>
               }
             />
+            <DatePicker
+              label="Due Date"
+              value={dueDate ? new Date(dueDate) : null}
+              disablePast
+              onChange={date => {
+                if (date && !isNaN(date.getTime())) {
+                  // convert to YYYY-MM-DD local
+                  const y = date.getFullYear();
+                  const m = String(date.getMonth() + 1).padStart(2, '0');
+                  const d = String(date.getDate()).padStart(2, '0');
+                  const val = `${y}-${m}-${d}`;
+                  setDueDate(isValidDateOnly(val) ? val : undefined);
+                } else {
+                  setDueDate(undefined);
+                }
+              }}
+              slotProps={{ textField: { helperText: 'Optional', fullWidth: true } }}
+            />
+            {dueDate && (
+              <Button
+                variant="text"
+                color="secondary"
+                size="small"
+                onClick={() => setDueDate(undefined)}
+                data-testid="clear-due-date"
+                sx={{ alignSelf: 'flex-start', mt: -1 }}
+              >
+                Clear due date
+              </Button>
+            )}
             {mode === 'edit' && (
               <FormControlLabel
                 control={

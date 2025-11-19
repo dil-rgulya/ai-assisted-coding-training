@@ -112,4 +112,69 @@ describe('TodoContext', () => {
 
     expect(screen.getByTestId('todo-count').textContent).toBe('0');
   });
+
+  it('adds a todo with a due date when provided', async () => {
+    const user = userEvent.setup();
+
+    const TestWithDueDate = () => {
+      const { addTodo, todos } = useTodo();
+      return (
+        <div>
+          <button
+            data-testid="add-todo-due"
+            onClick={() => addTodo('With Due', 'Has due', '2099-12-31')}
+          >
+            Add With Due
+          </button>
+          <div data-testid="todo-due-count">{todos.length}</div>
+          {todos.map(t => (
+            <div key={t.id} data-testid={`todo-item-${t.id}`}>
+              {t.dueDate}
+            </div>
+          ))}
+        </div>
+      );
+    };
+
+    render(
+      <TodoProvider>
+        <TestWithDueDate />
+      </TodoProvider>
+    );
+
+    await user.click(screen.getByTestId('add-todo-due'));
+    expect(screen.getByTestId('todo-due-count').textContent).toBe('1');
+    // Due date should appear
+    expect(screen.getByText('2099-12-31')).toBeInTheDocument();
+  });
+
+  it('sanitizes invalid due date input (ignored)', async () => {
+    const user = userEvent.setup();
+    const TestInvalidDue = () => {
+      const { addTodo, todos } = useTodo();
+      return (
+        <div>
+          <button
+            data-testid="add-invalid-due"
+            // Purposely invalid format
+            onClick={() => addTodo('Bad Due', 'Invalid', '31-12-2099' as unknown as string)}
+          >
+            Add Invalid Due
+          </button>
+          {todos.map(t => (
+            <div key={t.id}>{t.dueDate ? 'has due' : 'no due'}</div>
+          ))}
+        </div>
+      );
+    };
+
+    render(
+      <TodoProvider>
+        <TestInvalidDue />
+      </TodoProvider>
+    );
+
+    await user.click(screen.getByTestId('add-invalid-due'));
+    expect(screen.getByText('no due')).toBeInTheDocument();
+  });
 });
